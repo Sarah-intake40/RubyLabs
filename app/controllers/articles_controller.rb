@@ -1,6 +1,6 @@
 class ArticlesController < ApplicationController
 
-    http_basic_authenticate_with name: "sarah", password: "123456", except: [:index, :show]
+    before_action :authenticate_user!
  
     def index
         @articles = Article.all
@@ -9,7 +9,6 @@ class ArticlesController < ApplicationController
     def show
         @article = Article.find(params[:id])
     end
-
   
     def new
         @article = Article.new
@@ -20,29 +19,29 @@ class ArticlesController < ApplicationController
     end
    
     def create
-        @article = Article.new(article_params)
+        @article = current_user.articles.create(article_params)
     
-        if @article.save
-        redirect_to @article
+        if @article.valid?
+            render json: @article, status: :created, location: @article
         else
-        render 'new'
+            render json: @article.errors, status: :unprocessable_entity
         end
     end
     
     def update
         @article = Article.find(params[:id])
-       
+        authorize! :read, @article
         if @article.update(article_params)
-          redirect_to @article
+            redirect_to @article
         else
-          render 'edit'
+            render 'edit'
         end
     end
 
     def destroy
         @article = Article.find(params[:id])
+        authorize! :read, @article
         @article.destroy
-     
         redirect_to articles_path
     end
 

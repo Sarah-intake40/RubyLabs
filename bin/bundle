@@ -31,7 +31,7 @@ m = Module.new do
         bundler_version = a
       end
       next unless a =~ /\A--bundler(?:[= ](#{Gem::Version::VERSION_PATTERN}))?\z/
-      bundler_version = $1
+      bundler_version = $1  || ">= 0.a"
       update_index = i
     end
     bundler_version
@@ -63,7 +63,7 @@ m = Module.new do
   def bundler_version
     @bundler_version ||=
       env_var_version || cli_arg_version ||
-        lockfile_version
+        lockfile_version || "#{Gem::Requirement.default}.a"
   end
 
   def bundler_requirement
@@ -83,7 +83,7 @@ m = Module.new do
   def load_bundler!
     ENV["BUNDLE_GEMFILE"] ||= gemfile
 
-    activate_bundler
+    activate_bundler(bundler_version.dup)
   end
 
   def activate_bundler
